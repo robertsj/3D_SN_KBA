@@ -31,7 +31,7 @@ typedef double real;
 inline int Get_index(int N, int block_size, int blockID_x, int blockID_y, int blockID_z, int z_local, int x_or_y_local)
 {
 	return blockID_x * (N + 1) * (N + 1) * block_size * block_size + blockID_y * (N + 1) * block_size * block_size +
-				   blockID_z * block_size * block_size + z_local * block_size + x_or_y_local;
+			blockID_z * block_size * block_size + z_local * block_size + x_or_y_local;
 }
 
 Solver::Solver(int n_eg_in, int n_a_in, int cm_in, int fm_in, int upscatter_in, int iter_in)
@@ -187,7 +187,7 @@ void Solver::Calculate(string sweepfun, int nTs_in)
 	Set_start_TID(start_TID, N);
 	//cout << "first TID info for each plane is \n";
 	//for (int i = 0; i < (2 * N - 1) * 2; i++)
-		//cout << start_TID[i] << endl;
+	//cout << start_TID[i] << endl;
 
 	time_used_total = omp_get_wtime();
 	assert(sweepfun == "aes" || sweepfun == "ase" || sweepfun == "eas" || sweepfun == "esa" || sweepfun == "sae" || sweepfun == "sea");
@@ -316,8 +316,6 @@ void Solver::sweep_aes(int start_TID[])
 	//The arrangement of bd_info_x or _y is [blockID_X][blockID_Y][blockID_Z][z][x or y] to realize unit strid
 	//one row is wasted along each direction
 	real bd_info_x[(N + 1) * (N + 1) * (N + 1) * block_size * block_size], bd_info_y[(N + 1) * (N + 1) * (N + 1) * block_size * block_size];
-	SetValue(bd_info_x, (N + 1) * (N + 1) * (N + 1) * block_size * block_size, 0.0); //for simplicity, set all to 0, in fact only the start bd_info need to set 0
-	SetValue(bd_info_y, (N + 1) * (N + 1) * (N + 1) * block_size * block_size, 0.0);
 
 	//Octant loop
 	for(int o = 0; o < 8; o++)
@@ -333,6 +331,10 @@ void Solver::sweep_aes(int start_TID[])
 			//Energy loop
 			for(int e = 0; e < n_eg; ++e)
 			{
+				//for simplicity, set all to 0, in fact only the start bd_info need to set 0
+				SetValue(bd_info_x, (N + 1) * (N + 1) * (N + 1) * block_size * block_size, 0.0);
+				SetValue(bd_info_y, (N + 1) * (N + 1) * (N + 1) * block_size * block_size, 0.0);
+
 #pragma omp parallel num_threads(nTs)
 				{
 					//thread-private variables
@@ -371,7 +373,7 @@ void Solver::sweep_aes(int start_TID[])
 										c = (muDelta * bd_info_x[Get_index(N, block_size, blockID_x, blockID_y, blockID_z, z_local, x_local)] +
 												etaDelta * bd_info_y[Get_index(N, block_size, blockID_x, blockID_y, blockID_z, z_local, y_local)] +
 												xiDelta * bd_info_z[x_local * block_size + y_local] + Q[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e])
-													/ (SigT[m * n_eg + e] + sum);
+																	/ (SigT[m * n_eg + e] + sum);
 										phi[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e] += weight * c;
 										bd_info_x[Get_index(N, block_size, blockID_x, blockID_y, blockID_z, z_local, x_local)] = 2.0 * c -
 												bd_info_x[Get_index(N, block_size, blockID_x, blockID_y, blockID_z, z_local, x_local)];
@@ -447,7 +449,7 @@ void Solver::sweep_ase()
 							for(int e = 0; e < n_eg; ++e)
 							{
 								c[e] = (muDelta * ch[e] + etaDelta * cv[y * n_eg + e] + xiDelta * cz[x * totNFM_y * n_eg + y * n_eg + e] + Q[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e])
-																																																																																																						/ (SigT[m * n_eg + e] + sum);
+																																																																																																										/ (SigT[m * n_eg + e] + sum);
 								phi_private[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e] += weight * c[e];
 								ch[e] = 2.0 * c[e] - ch[e];
 								cv[y * n_eg + e] = 2.0 * c[e] - cv[y * n_eg + e];
@@ -516,7 +518,7 @@ void Solver::sweep_eas()
 								const int y = forward_y ? y0 : totNFM_y - 1 - y0;
 								const int m = fmmid[z * totNFM_x * totNFM_y + x * totNFM_y + y];
 								c = (muDelta * ch + etaDelta * cv[y] + xiDelta * cz[x * totNFM_y + y] + Q[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e])
-								/ (SigT[m * n_eg + e] + sum);
+												/ (SigT[m * n_eg + e] + sum);
 								phi_private[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e] += weight * c;
 								ch = 2.0 * c - ch;
 								cv[y] = 2.0 * c - cv[y];
@@ -585,7 +587,7 @@ void Solver::sweep_esa()
 								const real xiDelta = 2.0 * xi[a] / Delta_z;
 								const real sum = muDelta + etaDelta + xiDelta;
 								c[a] = (muDelta * ch[a] + etaDelta * cv[y * N_A + a] + xiDelta * cz[x * totNFM_y * N_A + y * N_A + a] + Q[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e])
-																																																																																																																		/ (SigT[m * n_eg + e] + sum);
+																																																																																																																						/ (SigT[m * n_eg + e] + sum);
 								phi_private[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e] += weight * c[a];
 								ch[a] = 2.0 * c[a] - ch[a];
 								cv[y * N_A + a] = 2.0 * c[a] - cv[y * N_A + a];
