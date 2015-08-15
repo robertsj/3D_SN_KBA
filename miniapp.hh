@@ -78,11 +78,11 @@ public:
 	void Calculate(string sweepfun, int nTs_in);
 	void get_quadrature();
 	void sweep_aes(int start_TID[]);
-	void sweep_ase();
-	void sweep_eas();
-	void sweep_esa();
-	void sweep_sae();
-	void sweep_sea();
+	void sweep_ase(int start_TID[]);
+	void sweep_eas(int start_TID[]);
+	void sweep_esa(int start_TID[]);
+	void sweep_sae(int start_TID[]);
+	void sweep_sea(int start_TID[]);
 	real get_sweeptime();
 	real get_totaltime();
 };
