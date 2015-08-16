@@ -184,6 +184,7 @@ void Solver::get_quadrature()
 
 void Solver::Calculate(string sweepfun, int nTs_in)
 {
+	time_used_total = omp_get_wtime();
 	nTs = nTs_in;
 	cout << "# of threads is " << nTs << endl;
 	N = sqrt(nTs);
@@ -191,11 +192,6 @@ void Solver::Calculate(string sweepfun, int nTs_in)
 	block_size = totNFM_x / N;
 	int start_TID[(2 * N - 1) * 2];// start_TID -- TID info for planes having starting threads;
 	Set_start_TID(start_TID, N);
-	//cout << "first TID info for each plane is \n";
-	//for (int i = 0; i < (2 * N - 1) * 2; i++)
-	//cout << start_TID[i] << endl;
-
-	time_used_total = omp_get_wtime();
 	assert(sweepfun == "aes" || sweepfun == "ase" || sweepfun == "eas" || sweepfun == "esa" || sweepfun == "sae" || sweepfun == "sea");
 	//Initial guess of phi, 0.0
 	SetValue(phi, phi_size, 0.0);
