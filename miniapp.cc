@@ -460,6 +460,7 @@ void Solver::sweep_ase(int start_TID[])
 									const int index_y = Get_index(N, block_size, n_eg, blockID_x, blockID_y, blockID_z, z_local, y_local);
 									const int index_z = x_local * block_size * n_eg + y_local * n_eg;
 									//Energy loop
+#pragma omp simd
 									for(int e = 0; e < n_eg; ++e)
 									{
 										c[e] = (muDelta * bd_info_x[index_x + e] + etaDelta * bd_info_y[index_y + e] +	xiDelta * bd_info_z[index_z + e] +
@@ -577,7 +578,13 @@ void Solver::sweep_esa(int start_TID[])
 	//The arrangement of bd_info_x or _y is [blockID_X][blockID_Y][blockID_Z][z][x or y] to realize unit strid
 	//one row is wasted along each direction
 	real bd_info_x[(N + 1) * (N + 1) * (N + 1) * block_size * block_size * N_A], bd_info_y[(N + 1) * (N + 1) * (N + 1) * block_size * block_size * N_A];
-
+	real muDelta[N_A], etaDelta[N_A], xiDelta[N_A];
+	for(int a = 0; a < N_A; a++)
+	{
+		muDelta[a] = 2.0 * mu[a] / Delta_y;
+		etaDelta[a] = 2.0 * eta[a] / Delta_x;
+		xiDelta[a] = 2.0 * xi[a] / Delta_z;
+	}
 	//Energy loop
 	for(int e = 0; e < n_eg; ++e)
 	{
@@ -628,15 +635,12 @@ void Solver::sweep_esa(int start_TID[])
 									const int index_y = Get_index(N, block_size, N_A, blockID_x, blockID_y, blockID_z, z_local, y_local);
 									const int index_z = x_local * block_size * N_A + y_local * N_A;
 									//Angle loop
+#pragma omp simd
 									for(int a = 0; a < N_A; a++)
 									{
-										const real muDelta = 2.0 * mu[a] / Delta_y;
-										const real etaDelta = 2.0 * eta[a] / Delta_x;
-										const real xiDelta = 2.0 * xi[a] / Delta_z;
-										const real sum = muDelta + etaDelta + xiDelta;
-
-										c[a] = (muDelta * bd_info_x[index_x + a] + etaDelta * bd_info_y[index_y + a] +	xiDelta * bd_info_z[index_z + a] +
-												Q[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e]) / (SigT[m * n_eg + e] + sum);
+										c[a] = (muDelta[a] * bd_info_x[index_x + a] + etaDelta[a] * bd_info_y[index_y + a] + xiDelta[a] * bd_info_z[index_z + a] +
+												Q[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e]) / (SigT[m * n_eg + e] +
+														muDelta[a] + etaDelta[a] + xiDelta[a]);
 										phi[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e] += weight * c[a];
 										bd_info_x[index_x + a] = 2.0 * c[a] - bd_info_x[index_x + a];
 										bd_info_y[index_y + a] = 2.0 * c[a] - bd_info_y[index_y + a];
@@ -723,6 +727,7 @@ void Solver::sweep_sae(int start_TID[])
 									const real sum = muDelta + etaDelta + xiDelta;
 									const int A = a * n_eg;
 									//Energy loop
+#pragma omp simd
 									for(int e = 0; e < n_eg; ++e)
 									{
 										c[A + e] = (muDelta * bd_info_x[index_x + A + e] + etaDelta * bd_info_y[index_y + A + e] +	xiDelta * bd_info_z[index_z + A + e] +
@@ -757,6 +762,13 @@ void Solver::sweep_sea(int start_TID[])
 	//The arrangement of bd_info_x or _y is [blockID_X][blockID_Y][blockID_Z][z][x or y] to realize unit strid
 	//one row is wasted along each direction
 	real bd_info_x[(N + 1) * (N + 1) * (N + 1) * block_size * block_size * EA], bd_info_y[(N + 1) * (N + 1) * (N + 1) * block_size * block_size * EA];
+	real muDelta[N_A], etaDelta[N_A], xiDelta[N_A];
+	for(int a = 0; a < N_A; a++)
+	{
+		muDelta[a] = 2.0 * mu[a] / Delta_y;
+		etaDelta[a] = 2.0 * eta[a] / Delta_x;
+		xiDelta[a] = 2.0 * xi[a] / Delta_z;
+	}
 
 	//Octant loop
 	for(int o = 0; o < 8; o++)
@@ -807,15 +819,12 @@ void Solver::sweep_sea(int start_TID[])
 								{
 									const int E = e * N_A;
 									//Angle loop
+#pragma omp simd
 									for(int a = 0; a < N_A; a++)
 									{
-										const real muDelta = 2.0 * mu[a] / Delta_y;
-										const real etaDelta = 2.0 * eta[a] / Delta_x;
-										const real xiDelta = 2.0 * xi[a] / Delta_z;
-										const real sum = muDelta + etaDelta + xiDelta;
-
-										c[E + a] = (muDelta * bd_info_x[index_x + E + a] + etaDelta * bd_info_y[index_y + E + a] +	xiDelta * bd_info_z[index_z + E + a] +
-												Q[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e]) / (SigT[m * n_eg + e] + sum);
+										c[E + a] = (muDelta[a] * bd_info_x[index_x + E + a] + etaDelta[a] * bd_info_y[index_y + E + a] + xiDelta[a] * bd_info_z[index_z + E + a] +
+												Q[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e]) / (SigT[m * n_eg + e] +
+														muDelta[a] + etaDelta[a] + xiDelta[a]);
 										phi[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e] += weight * c[E + a];
 										bd_info_x[index_x + E + a] = 2.0 * c[E + a] - bd_info_x[index_x + E + a];
 										bd_info_y[index_y + E + a] = 2.0 * c[E + a] - bd_info_y[index_y + E + a];
