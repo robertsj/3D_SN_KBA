@@ -188,6 +188,7 @@ void Solver::Calculate(string sweepfun, int nTs_in)
 	nTs = nTs_in;
 	cout << "# of threads is " << nTs << endl;
 	N = sqrt(nTs);
+	assert(totNFM_x % N == 0);
 
 	block_size = totNFM_x / N;
 	int start_TID[(2 * N - 1) * 2];// start_TID -- TID info for planes having starting threads;
