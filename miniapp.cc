@@ -335,10 +335,6 @@ void Solver::sweep_aes(int start_TID[])
 		//Angle loop
 		for(int a = 0; a < N_A; a++)
 		{
-			/*const real muDelta = 2.0 * mu[a] / Delta_y;
-			const real etaDelta = 2.0 * eta[a] / Delta_x;
-			const real xiDelta = 2.0 * xi[a] / Delta_z;
-			const real sum = muDelta + etaDelta + xiDelta;*/
 			//Energy loop
 			for(int e = 0; e < n_eg; ++e)
 			{
@@ -430,11 +426,6 @@ void Solver::sweep_ase(int start_TID[])
 		//Angle loop
 		for(int a = 0; a < N_A; a++)
 		{
-			//const real muDelta = 2.0 * mu[a] / Delta_y;
-			//const real etaDelta = 2.0 * eta[a] / Delta_x;
-			//const real xiDelta = 2.0 * xi[a] / Delta_z;
-			//const real sum = muDelta + etaDelta + xiDelta;
-
 			//for simplicity, set all to 0, in fact only the start bd_info need to set 0
 			SetValue(bd_info_x, (N + 1) * (N + 1) * (N + 1) * block_size * block_size * n_eg, 0.0);
 			SetValue(bd_info_y, (N + 1) * (N + 1) * (N + 1) * block_size * block_size * n_eg, 0.0);
@@ -529,10 +520,6 @@ void Solver::sweep_eas(int start_TID[])
 			//Angle loop
 			for(int a = 0; a < N_A; a++)
 			{
-				/*const real muDelta = 2.0 * mu[a] / Delta_y;
-				const real etaDelta = 2.0 * eta[a] / Delta_x;
-				const real xiDelta = 2.0 * xi[a] / Delta_z;
-				const real sum = muDelta + etaDelta + xiDelta;*/
 				//for simplicity, set all to 0, in fact only the start bd_info need to set 0
 				SetValue(bd_info_x, (N + 1) * (N + 1) * (N + 1) * block_size * block_size, 0.0);
 				SetValue(bd_info_y, (N + 1) * (N + 1) * (N + 1) * block_size * block_size, 0.0);
@@ -611,6 +598,7 @@ void Solver::sweep_esa(int start_TID[])
 		xiDelta[a] = 2.0 * xi[a] / Delta_z;
 		sum[a] = muDelta[a] + etaDelta[a] + xiDelta[a];
 	}
+
 	//Energy loop
 	for(int e = 0; e < n_eg; ++e)
 	{
@@ -731,7 +719,6 @@ void Solver::sweep_sae(int start_TID[])
 			real bd_info_z[block_size * block_size * AE]; //[X][Y][A][E]
 			SetValue(bd_info_z, block_size * block_size * AE, 0.0);
 			real c[AE];
-
 
 			for(int p = 0; p < 3 * N - 2; p++)
 			{
