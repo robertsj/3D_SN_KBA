@@ -75,12 +75,3 @@ void Set_block_ID_xy(int start_TID[], int N, int start_plane, int TID, int &bloc
 		block_x = start_plane - (N - 1) + TID - start_TID[start_plane * 2];
 	}
 }
-
-//inline int Get_index(int N, int block_size, int blockID_x, int blockID_y, int blockID_z, int z_local, int x_or_y_local)
-//{
-	//return blockID_x * (N + 1) * (N + 1) * block_size * block_size + blockID_y * (N + 1) * block_size * block_size +
-		//		   blockID_z * block_size * block_size + z_local * block_size + x_or_y_local;
-//}
-
-
-

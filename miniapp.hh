@@ -40,7 +40,7 @@ private:
 	 * iter -- # of running iteration;
 	 * totNFM_x, _y and _z -- total number of fine cells in each direction direction, which equals to cm * fm;
 	 * nTs -- # of threads used, in 3D KBA, must be i ^ 2, e.g., 1, 4, 9, 16...;
-	 * N -- sqrt of nTs;
+	 * N -- sqrt of nTs, also means # of blocks in x & y directions;
 	 * block_size -- block size along each direction, = totNFM_x or _y or _z / N;
 	 * sweepfun -- used to choose sweep function, aes, ase, eas, esa, sae, sea;
 	 * mu, eta, xi -- cosines of neutron direction with x, y, z axes, respectively;
@@ -55,10 +55,14 @@ private:
 	 * begin_time:used to calculate time used;
 	 * Q -- emission density, has phase space same as phi, i.e., [Z][X][Y][E];
 	 * fmmid[z][x][y] -- material ID in fine cell [z][x][y];
+	 * n_b -- # of blocks in z direction, = totNFM_z / blocksize_z
+	 * n_p -- # of diagonal planes in block sweep
+	 * remain -- remain fine cells along z axis after block sweep, = totNFM_z % blocksize_z
 
 	 * */
 
-	int n_eg, n_a, N_A, n_m, cm, fm, upscatter, iter, totNFM_x, totNFM_y, totNFM_z, nTs, phi_size, block_size, N;
+	int n_eg, n_a, N_A, n_m, cm_xy, fm_xy, cm_z, fm_z, phi_size, upscatter, iter, totNFM_x, totNFM_y, totNFM_z, nTs, N, blocksize_xy;
+	int blocksize_z, n_b, n_p, remain;
 	v_dbl mu, eta, xi;
 	real* phi;
 	real Delta_x, Delta_y, Delta_z;
@@ -73,9 +77,9 @@ private:
 
 
 public:
-	Solver(int n_eg_in, int n_a_in, int cm_in, int fm_in, int upscatter_in, int iter_in);
+	Solver(int n_eg_in, int n_a_in, int cm_xy_in, int fm_xy_in, int cm_z_in, int fm_z_in, int upscatter_in, int iter_in);
 	~Solver();
-	void Calculate(string sweepfun, int nTs_in);
+	void Calculate(string sweepfun, int nTs_in, int blocksize_z_in);
 	void get_quadrature();
 	void sweep_aes(int start_TID[]);
 	void sweep_ase(int start_TID[]);
