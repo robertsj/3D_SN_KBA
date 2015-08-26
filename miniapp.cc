@@ -448,8 +448,7 @@ void Solver::sweep_aes(int start_TID[])
 								const int y = forward_y ? y0 : totNFM_y - 1 - y0;
 								const int m = fmmid[z * totNFM_x * totNFM_y + x * totNFM_y + y];
 								c = (muDelta[a] * ch + etaDelta[a] * cv[y] + xiDelta[a] * cz[x * totNFM_y + y] +
-										Q[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e])
-																																																						/ (SigT[m * n_eg + e] + sum[a]);
+										Q[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e]) / (SigT[m * n_eg + e] + sum[a]);
 								phi[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e] += weight * c;
 								ch = 2.0 * c - ch;
 								cv[y] = 2.0 * c - cv[y];
@@ -965,7 +964,7 @@ void Solver::sweep_sae(int start_TID[])
 			{
 				if (p >= start_plane && p < end_plane)//select working threads
 				{
-					blockID_z = p - start_plane;
+					blockID_z = (p - start_plane);
 					//block sweep
 					for(int z0 = blockID_z * blocksize_z; z0 < blockID_z * blocksize_z + blocksize_z; z0++) //always use global ordinates
 					{
