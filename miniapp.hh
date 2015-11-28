@@ -16,6 +16,8 @@ typedef double real;
 #include <iostream>
 #include <cmath>
 #include <time.h>
+#include <omp.h>
+
 using namespace std;
 #include <vector>
 typedef std::vector<real> v_dbl;
@@ -27,6 +29,7 @@ typedef std::vector<real> v_dbl;
 
 class Solver
 {
+
 private:
 
   /* n_eg -- # of energy groups;
@@ -87,4 +90,14 @@ public:
   real get_sweeptime();
   real get_totaltime();
 };
+
+
+inline int Get_index(int N, int n_b, int blocksize_z, int blocksize_xy, int sweep,
+    int blockID_x, int blockID_y, int blockID_z, int z_local, int x_or_y_local)
+{
+  return blockID_x * (N + 1) * n_b * blocksize_z * blocksize_xy * sweep + blockID_y * n_b * blocksize_z * blocksize_xy * sweep +
+      blockID_z * blocksize_z * blocksize_xy * sweep + z_local * blocksize_xy * sweep + x_or_y_local * sweep;
+}
+
+
 #endif /* MINIAPP_HH_ */
