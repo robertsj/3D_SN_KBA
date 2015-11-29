@@ -17,6 +17,8 @@ typedef double real;
 #include <cmath>
 #include <time.h>
 #include <omp.h>
+#include <map>
+#include "mesh.hh"
 
 using namespace std;
 #include <vector>
@@ -31,6 +33,8 @@ class Solver
 {
 
 private:
+
+
 
   /* n_eg -- # of energy groups;
    * n_a -- in each octant, there are n_a * n_a = N_A angles;
@@ -65,7 +69,7 @@ private:
 
   int n_eg, n_a, N_A, n_m, cm_xy, fm_xy, cm_z, fm_z, phi_size, upscatter, iter, totNFM_x, totNFM_y, totNFM_z, nTs, N, blocksize_xy;
   int blocksize_z, n_b, n_p, remain;
-  v_dbl mu, eta, xi;
+  v_dbl mu, eta, xi, wt;
   real* phi;
   real Delta_x, Delta_y, Delta_z;
   vector<int> RegMat;
@@ -75,11 +79,16 @@ private:
   int* fmmid;
   real time_used_sweep;
   real time_used_total;
+  std::string order;
+  const Mesh mesh;
 
 public:
-  Solver(int n_eg_in, int n_a_in, int cm_xy_in, int fm_xy_in, int cm_z_in, int fm_z_in, int upscatter_in, int iter_in);
+
+  Solver(std::string order_in, int n_eg_in, int n_a_in, int cm_xy_in, int fm_xy_in,
+      int cm_z_in, int fm_z_in, int upscatter_in, int iter_in,
+      int xbs, int ybs, int zbs, int nt);
   ~Solver();
-  void Calculate(string sweepfun, int nTs_in, int blocksize_z_in);
+  void Calculate();
   void get_quadrature();
   void sweep_aes(int start_TID[]);
   void sweep_ase(int start_TID[]);
@@ -87,16 +96,25 @@ public:
   void sweep_esa(int start_TID[]);
   void sweep_sae(int start_TID[]);
   void sweep_sea(int start_TID[]);
+
+  void sweep_eas_mod(int start_TID[]);
+
+
   real get_sweeptime();
   real get_totaltime();
+
+
 };
 
 
 inline int Get_index(int N, int n_b, int blocksize_z, int blocksize_xy, int sweep,
     int blockID_x, int blockID_y, int blockID_z, int z_local, int x_or_y_local)
 {
-  return blockID_x * (N + 1) * n_b * blocksize_z * blocksize_xy * sweep + blockID_y * n_b * blocksize_z * blocksize_xy * sweep +
-      blockID_z * blocksize_z * blocksize_xy * sweep + z_local * blocksize_xy * sweep + x_or_y_local * sweep;
+  return blockID_x * (N + 1) * n_b * blocksize_z * blocksize_xy * sweep +
+         blockID_y * n_b * blocksize_z * blocksize_xy * sweep +
+         blockID_z * blocksize_z * blocksize_xy * sweep +
+         z_local * blocksize_xy * sweep +
+         x_or_y_local * sweep;
 }
 
 

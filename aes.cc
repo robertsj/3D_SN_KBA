@@ -3,7 +3,7 @@
 
 void Solver::sweep_aes(int start_TID[])
 {
-  const real weight = 0.5 * M_PI / N_A;
+  const real weight = 0.5 * M_PI / n_a;
   SetValue(phi, phi_size, 0.0);
   bool forward_x, forward_y, forward_z;
   //The arrangement of bd_info_x or _y is [blockID_X][blockID_Y][blockID_Z][z][x or y] to realize unit strid
@@ -11,8 +11,8 @@ void Solver::sweep_aes(int start_TID[])
   real bd_info_x[(N + 1) * (N + 1) * n_b * blocksize_z * blocksize_xy], bd_info_y[(N + 1) * (N + 1) * (n_b) * blocksize_z * blocksize_xy];
   real ch, cv[totNFM_y], cz[totNFM_x * totNFM_y];//used in the remain sweep after block sweep
 
-  real muDelta[N_A], etaDelta[N_A], xiDelta[N_A], sum[N_A];
-  for(int a = 0; a < N_A; a++)
+  real muDelta[n_a], etaDelta[n_a], xiDelta[n_a], sum[n_a];
+  for(int a = 0; a < n_a; a++)
   {
     muDelta[a] = 2.0 * mu[a] / Delta_y;
     etaDelta[a] = 2.0 * eta[a] / Delta_x;
@@ -25,7 +25,7 @@ void Solver::sweep_aes(int start_TID[])
   {
     DetermineDir(o, forward_z, forward_x, forward_y);
     //Angle loop
-    for(int a = 0; a < N_A; a++)
+    for(int a = 0; a < n_a; a++)
     {
       //Energy loop
       for(int e = 0; e < n_eg; ++e)

@@ -3,8 +3,8 @@
 
 void Solver::sweep_sae(int start_TID[])
 {
-  const real weight = 0.5 * M_PI / N_A;
-  const int AE = N_A * n_eg;
+  const real weight = 0.5 * M_PI / n_a;
+  const int AE = n_a * n_eg;
   SetValue(phi, phi_size, 0.0);
   bool forward_x, forward_y, forward_z;
   //The arrangement of bd_info_x or _y is [blockID_X][blockID_Y][blockID_Z][z][x or y] to realize unit strid
@@ -12,8 +12,8 @@ void Solver::sweep_sae(int start_TID[])
   real bd_info_x[(N + 1) * (N + 1) * n_b * blocksize_z * blocksize_xy * AE], bd_info_y[(N + 1) * (N + 1) * n_b * blocksize_z * blocksize_xy * AE];
   real ch[AE], cv[totNFM_y * AE], cz[totNFM_x * totNFM_y * AE];
 
-  real muDelta[N_A], etaDelta[N_A], xiDelta[N_A], sum[N_A];
-  for(int a = 0; a < N_A; a++)
+  real muDelta[n_a], etaDelta[n_a], xiDelta[n_a], sum[n_a];
+  for(int a = 0; a < n_a; a++)
   {
     muDelta[a] = 2.0 * mu[a] / Delta_y;
     etaDelta[a] = 2.0 * eta[a] / Delta_x;
@@ -67,7 +67,7 @@ void Solver::sweep_sae(int start_TID[])
                 const int index_y = Get_index(N, n_b, blocksize_z, blocksize_xy, AE, blockID_x, blockID_y, blockID_z, z_local, y_local);
                 const int index_z = x_local * blocksize_xy * AE + y_local * AE;
                 //Angle loop
-                for(int a = 0; a < N_A; a++)
+                for(int a = 0; a < n_a; a++)
                 {
                   const int A = a * n_eg;
                   //Energy loop
@@ -98,28 +98,28 @@ void Solver::sweep_sae(int start_TID[])
         if (forward_x == true && forward_y == true)
           for(int x0 = 0; x0 < blocksize_xy; x0++)
             for(int y0 = 0; y0 < blocksize_xy; y0++)
-              for(int a = 0; a < N_A; a++)
+              for(int a = 0; a < n_a; a++)
                 for(int e = 0; e < n_eg; e++)
                   cz[(blockID_x * blocksize_xy + x0) * totNFM_y * AE + (blockID_y * blocksize_xy  + y0) * AE + a * n_eg + e] =
                       bd_info_z[x0 * blocksize_xy * AE + y0 * AE + a * n_eg + e];
         else if(forward_x == true && forward_y == false)
           for(int x0 = 0; x0 < blocksize_xy; x0++)
             for(int y0 = 0; y0 < blocksize_xy; y0++)
-              for(int a = 0; a < N_A; a++)
+              for(int a = 0; a < n_a; a++)
                 for(int e = 0; e < n_eg; e++)
                   cz[(blockID_x * blocksize_xy + x0) * totNFM_y * AE + ((N - 1 - blockID_y) * blocksize_xy + y0) * AE + a * n_eg + e] =
                       bd_info_z[x0 * blocksize_xy * AE + y0 * AE + a * n_eg + e];
         else if(forward_x == false && forward_y == true)
           for(int x = 0; x < blocksize_xy; x++)
             for(int y = 0; y < blocksize_xy; y++)
-              for(int a = 0; a < N_A; a++)
+              for(int a = 0; a < n_a; a++)
                 for(int e = 0; e < n_eg; e++)
                   cz[((N - 1 - blockID_x) * blocksize_xy + x) * totNFM_y * AE + (blockID_y * blocksize_xy + y) * AE + a * n_eg + e] =
                       bd_info_z[x * blocksize_xy * AE + y * AE + a * n_eg + e];
         else
           for(int x = 0; x < blocksize_xy; x++)
             for(int y = 0; y < blocksize_xy; y++)
-              for(int a = 0; a < N_A; a++)
+              for(int a = 0; a < n_a; a++)
                 for(int e = 0; e < n_eg; e++)
                   cz[((N - 1 - blockID_x) * blocksize_xy + x) * totNFM_y * AE + ((N - 1 - blockID_y) * blocksize_xy + y) * AE + a * n_eg + e] =
                       bd_info_z[x * blocksize_xy * AE + y * AE + a * n_eg + e];
@@ -142,7 +142,7 @@ void Solver::sweep_sae(int start_TID[])
           {
             const int y = forward_y ? y0 : totNFM_y - 1 - y0;
             const int m = fmmid[z * totNFM_x * totNFM_y + x * totNFM_y + y];
-            for(int a = 0; a < N_A; a++)
+            for(int a = 0; a < n_a; a++)
             {
               const int A = a * n_eg;
 #pragma omp simd

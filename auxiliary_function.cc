@@ -6,6 +6,7 @@
  */
 #include "auxiliary_function.hh"
 #include <iostream>
+#include <cstdio>
 
 #ifdef FLOAT
 typedef float real;
@@ -74,4 +75,18 @@ void Set_block_ID_xy(int start_TID[], int N, int start_plane, int TID, int &bloc
     block_y = N - 1 - (TID - start_TID[start_plane * 2]);
     block_x = start_plane - (N - 1) + TID - start_TID[start_plane * 2];
   }
+}
+
+void print_line(const int n)
+{
+  for (int i = 0; i < n; ++i)
+    printf("-");
+  printf("\n");
+}
+
+void print_dline(const int n)
+{
+  for (int i = 0; i < n; ++i)
+    printf("=");
+  printf("\n");
 }

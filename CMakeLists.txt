@@ -25,15 +25,17 @@ set(CMAKE_CXX_FLAGS ${OpenMP_CXX_FLAGS})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(SRC
+    mesh.cc
     main.cc
     miniapp.cc
     auxiliary_function.cc
     eas.cc
     esa.cc
-    sae.cc
-    sea.cc
     ase.cc
     aes.cc
+    sae.cc
+    sea.cc
+    eas_mod.cc
 )
 add_executable(3D_SN_KBA 
                ${SRC}

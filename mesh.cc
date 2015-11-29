@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <time.h>
 #include <algorithm>
-
+#include "auxiliary_function.hh"
 
 //----------------------------------------------------------------------------//
 Mesh::Mesh(int fm_xy, int cm_xy,
@@ -111,19 +111,7 @@ Mesh::Mesh(int fm_xy, int cm_xy,
       k_s[k] += zbs[kk];
 }
 
-void print_line(const int n = 80)
-{
-  for (int i = 0; i < n; ++i)
-    printf("-");
-  printf("\n");
-}
 
-void print_dline(const int n = 80)
-{
-  for (int i = 0; i < n; ++i)
-    printf("=");
-  printf("\n");
-}
 
 //----------------------------------------------------------------------------//
 void Mesh::print_blocks()

@@ -3,8 +3,8 @@
 
 void Solver::sweep_sea(int start_TID[])
 {
-  const real weight = 0.5 * M_PI / N_A;
-  const int EA = n_eg * N_A;
+  const real weight = 0.5 * M_PI / n_a;
+  const int EA = n_eg * n_a;
   SetValue(phi, phi_size, 0.0);
   bool forward_x, forward_y, forward_z;
   //The arrangement of bd_info_x or _y is [blockID_X][blockID_Y][blockID_Z][z][x or y] to realize unit strid
@@ -12,8 +12,8 @@ void Solver::sweep_sea(int start_TID[])
   real bd_info_x[(N + 1) * (N + 1) * n_b * blocksize_z * blocksize_xy * EA], bd_info_y[(N + 1) * (N + 1) * n_b * blocksize_z * blocksize_xy * EA];
   real ch[EA], cv[totNFM_y * EA], cz[totNFM_x * totNFM_y * EA];
 
-  real muDelta[N_A], etaDelta[N_A], xiDelta[N_A], sum[N_A];
-  for(int a = 0; a < N_A; a++)
+  real muDelta[n_a], etaDelta[n_a], xiDelta[n_a], sum[n_a];
+  for(int a = 0; a < n_a; a++)
   {
     muDelta[a] = 2.0 * mu[a] / Delta_y;
     etaDelta[a] = 2.0 * eta[a] / Delta_x;
@@ -42,8 +42,8 @@ void Solver::sweep_sea(int start_TID[])
 
       real bd_info_z[blocksize_xy * blocksize_xy * EA]; //[X][Y][A][E]
       SetValue(bd_info_z, blocksize_xy * blocksize_xy * EA, 0.0);
-      real c[N_A];
-      real phi_tmp[N_A];
+      real c[n_a];
+      real phi_tmp[n_a];
       for(int p = 0; p < n_p; p++)
       {
         if (p >= start_plane && p < end_plane)//select working threads
@@ -69,10 +69,10 @@ void Solver::sweep_sea(int start_TID[])
                 //Energy loop
                 for(int e = 0; e < n_eg; ++e)
                 {
-                  const int E = e * N_A;
+                  const int E = e * n_a;
                   //Angle loop
 #pragma omp simd
-                  for(int a = 0; a < N_A; a++)
+                  for(int a = 0; a < n_a; a++)
                   {
                     c[a] = (muDelta[a] * bd_info_x[index_x + E + a] + etaDelta[a] * bd_info_y[index_y + E + a] + xiDelta[a] * bd_info_z[index_z + E + a] +
                         Q[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e]) / (SigT[m * n_eg + e] +
@@ -82,7 +82,7 @@ void Solver::sweep_sea(int start_TID[])
                     bd_info_y[index_y + E + a] = 2.0 * c[a] - bd_info_y[index_y + E + a];
                     bd_info_z[index_z + E + a] = 2.0 * c[a] - bd_info_z[index_z + E + a];
                   }
-                  for(int a = 0; a < N_A; a++)
+                  for(int a = 0; a < n_a; a++)
                     phi[z_global * totNFM_x * totNFM_y * n_eg + x_global * totNFM_y * n_eg + y_global * n_eg + e] += phi_tmp[a];
                 }
               }
@@ -104,36 +104,36 @@ void Solver::sweep_sea(int start_TID[])
           for(int x0 = 0; x0 < blocksize_xy; x0++)
             for(int y0 = 0; y0 < blocksize_xy; y0++)
               for(int e = 0; e < n_eg; e++)
-                for(int a = 0; a < N_A; a++)
-                  cz[(blockID_x * blocksize_xy + x0) * totNFM_y * EA + (blockID_y * blocksize_xy + y0) * EA + e * N_A + a] =
-                      bd_info_z[x0 * blocksize_xy * EA + y0 * EA + e * N_A + a];
+                for(int a = 0; a < n_a; a++)
+                  cz[(blockID_x * blocksize_xy + x0) * totNFM_y * EA + (blockID_y * blocksize_xy + y0) * EA + e * n_a + a] =
+                      bd_info_z[x0 * blocksize_xy * EA + y0 * EA + e * n_a + a];
         else if(forward_x == true && forward_y == false)
           for(int x0 = 0; x0 < blocksize_xy; x0++)
             for(int y0 = 0; y0 < blocksize_xy; y0++)
               for(int e = 0; e < n_eg; e++)
-                for(int a = 0; a < N_A; a++)
-                  cz[(blockID_x * blocksize_xy + x0) * totNFM_y * EA + ((N - 1 - blockID_y) * blocksize_xy + y0) * EA + e * N_A + a] =
-                      bd_info_z[x0 * blocksize_xy * EA + y0 * EA + e * N_A + a];
+                for(int a = 0; a < n_a; a++)
+                  cz[(blockID_x * blocksize_xy + x0) * totNFM_y * EA + ((N - 1 - blockID_y) * blocksize_xy + y0) * EA + e * n_a + a] =
+                      bd_info_z[x0 * blocksize_xy * EA + y0 * EA + e * n_a + a];
         else if(forward_x == false && forward_y == true)
           for(int x = 0; x < blocksize_xy; x++)
             for(int y = 0; y < blocksize_xy; y++)
               for(int e = 0; e < n_eg; e++)
-                for(int a = 0; a < N_A; a++)
-                  cz[((N - 1 - blockID_x) * blocksize_xy + x) * totNFM_y * EA + (blockID_y * blocksize_xy + y) * EA + e * N_A + a] =
-                      bd_info_z[x * blocksize_xy * EA + y * EA + e * N_A + a];
+                for(int a = 0; a < n_a; a++)
+                  cz[((N - 1 - blockID_x) * blocksize_xy + x) * totNFM_y * EA + (blockID_y * blocksize_xy + y) * EA + e * n_a + a] =
+                      bd_info_z[x * blocksize_xy * EA + y * EA + e * n_a + a];
         else
           for(int x = 0; x < blocksize_xy; x++)
             for(int y = 0; y < blocksize_xy; y++)
               for(int e = 0; e < n_eg; e++)
-                for(int a = 0; a < N_A; a++)
-                  cz[((N - 1 - blockID_x) * blocksize_xy + x) * totNFM_y * EA + ((N - 1 - blockID_y) * blocksize_xy + y) * EA + e * N_A + a] =
-                      bd_info_z[x * blocksize_xy * EA + y * EA + e * N_A + a];
+                for(int a = 0; a < n_a; a++)
+                  cz[((N - 1 - blockID_x) * blocksize_xy + x) * totNFM_y * EA + ((N - 1 - blockID_y) * blocksize_xy + y) * EA + e * n_a + a] =
+                      bd_info_z[x * blocksize_xy * EA + y * EA + e * n_a + a];
       }
     }
     //remain sweep
     if (remain != 0)
     {
-      real c[N_A], phi_tmp[N_A];
+      real c[n_a], phi_tmp[n_a];
       for(int z0 = 0; z0 < remain; z0++)
       {
         const int z = forward_z ? n_b * blocksize_z + z0 : remain - 1 - z0;
@@ -149,9 +149,9 @@ void Solver::sweep_sea(int start_TID[])
             const int m = fmmid[z * totNFM_x * totNFM_y + x * totNFM_y + y];
             for(int e = 0; e < n_eg; e++)
             {
-              const int E = e * N_A;
+              const int E = e * n_a;
 #pragma omp simd
-              for(int a = 0; a < N_A; a++)
+              for(int a = 0; a < n_a; a++)
               {
                 c[a] = (muDelta[a] * ch[E + a] + etaDelta[a] * cv[y * EA + E + a] + xiDelta[a] * cz[x * totNFM_y * EA + y * EA + E + a] +
                     Q[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e]) / (SigT[m * n_eg + e] + sum[a]);
@@ -160,7 +160,7 @@ void Solver::sweep_sea(int start_TID[])
                 cv[y * EA + E + a] = 2.0 * c[a] - cv[y * EA + E + a];
                 cz[x * totNFM_y * EA + y * EA + E + a] = 2.0 * c[a] - cz[x * totNFM_y * EA + y * EA + E + a];
               }
-              for(int a = 0; a < N_A; a++)
+              for(int a = 0; a < n_a; a++)
                 phi[z * totNFM_x * totNFM_y * n_eg + x * totNFM_y * n_eg + y * n_eg + e] += phi_tmp[a];
             }
           }

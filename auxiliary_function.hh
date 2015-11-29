@@ -21,5 +21,8 @@ void Set_start_TID(int start_TID[], int N);
 void Find_start_plane(int start_TID[], int N, int TID, int &start_plane);
 void Set_block_ID_xy(int start_TID[], int N, int start_plane, int TID, int &block_x, int &block_y);
 
+void print_line(const int n = 80);
+void print_dline(const int n = 80);
+
 //inline int Get_index(int N, int block_size, int blockID_x, int blockID_y, int blockID_z, int z_local, int x_or_y_local);
 #endif /* AUXILIARY_FUNCTION_HH_ */

@@ -20,27 +20,35 @@ typedef float real;
 typedef double real;
 #endif
 
-Solver::Solver(int n_eg_in, int n_a_in, int cm_xy_in, int fm_xy_in, int cm_z_in, int fm_z_in, int upscatter_in, int iter_in)
+//----------------------------------------------------------------------------//
+Solver::Solver(std::string order_in, int n_eg_in, int n_a_in, int cm_xy_in, int fm_xy_in,
+    int cm_z_in, int fm_z_in, int upscatter_in, int iter_in,
+    int xbs, int ybs, int zbs, int nt)
+  : order(order_in)
+  , n_eg(n_eg_in)
+  , n_a(n_a_in)
+  , cm_xy(cm_xy_in)
+  , fm_xy(fm_xy_in)
+  , cm_z(cm_z_in)
+  , fm_z(fm_z_in)
+  , upscatter(upscatter_in)
+  , iter(iter_in)
+  , blocksize_xy(xbs)
+  , blocksize_z(zbs)
+  , nTs(nt)
+  , mesh(fm_xy, cm_xy, fm_z, cm_z, xbs, xbs, zbs)
 {
-  assert(upscatter_in < n_eg_in);
-  n_eg = n_eg_in;
-  n_a = n_a_in;
-  N_A = n_a * n_a;
-  cm_xy = cm_xy_in;
-  fm_xy = fm_xy_in;
-  cm_z = cm_z_in;
-  fm_z = fm_z_in;
-  upscatter = upscatter_in;
-  iter = iter_in;
+
   cout << "input parameters \n" << "# of energy groups: " << n_eg << "\n"
-      << "# of angles in each octant: " << N_A << "\n"
+      << "# of angles in each octant: " << n_a << "\n"
       << "# of coarse cells along x & y axes: " << cm_xy << " \n"
       << "# of fine cells in one coarse cell along x & y axes: "<< fm_xy << "\n"
       << "# of coarse cells along z axis: " << cm_z << " \n"
       << "# of fine cells in one coarse cell along z axis: "<< fm_z << "\n"
       << "# of upscatter energy groups: " << upscatter << "\n"
-      << "# of running iterations: " << iter << "\n";
-
+      << "# of running iterations: " << iter << "\n"
+      << "xy block size: " << xbs << endl
+      << " z block size: " << zbs << endl;
 
   totNFM_x = cm_xy * fm_xy;
   totNFM_y = cm_xy * fm_xy;
@@ -136,50 +144,39 @@ Solver::~Solver()
     delete[] fmmid;
 }
 
+//----------------------------------------------------------------------------//
 void Solver::get_quadrature()
 {
-  /* polar angle theta; azimuthal angle phi
-   * use cosine of polar angle, omega, to represent directions, so divided [0, 1] into n_a
-   * sections;
-   * directly use azimuthal angle phi to represent directions, so divided [0, pi/2] into n_a
-   * sections */
-
-  v_dbl phi_0(n_a, 0.0);
-  real delta_phi = 0.5 * M_PI / n_a;
+  /*  This provides an easy but sort of realistic quadrature defined only
+   *  by the numer of angles per octant.
+   */
+  mu.resize(n_a);
+  eta.resize(n_a);
+  xi.resize(n_a);
+  wt.resize(n_a);
   for (int i = 0; i < n_a; ++i)
-    phi_0[i] = real(i) * delta_phi + 0.5 * delta_phi;
-
-  v_dbl cos_theta(n_a, 0.0);
-  real delta_theta = 1.0 / n_a;
-  for (int i = 0; i < n_a; ++i)
-    cos_theta[i] = real(i) * delta_theta + 0.5 * delta_theta;
-
-  for (int i = 0; i < n_a; ++i) //index of azimuthal angle
   {
-    for (int j = 0; j < n_a; ++j) //index of polar angle
-    {
-      real sin_theta = sqrt(1 - cos_theta[j] * cos_theta[j]);
-      // mu = cos(phi)*sin(theta)
-      mu.push_back(cos(phi_0[i]) * sin_theta);
-      // eta = sin(phi)*sin(theta)
-      eta.push_back(sin(phi_0[i]) * sin_theta);
-      // xi = cos(theta)
-      xi.push_back(cos_theta[j]);
-    }
+    mu[i] = 1.0/(i+0.5/i/n_a);
+    int j = n_a - i - 1;
+    eta[i] = 1.0/(j+0.5/j/n_a);
+    xi[i] = std::sqrt(1.0-mu[i]*mu[i]-eta[i]*eta[i]);
+    wt[i] = 1.5707963267948966 / n_a;
   }
 }
 
-void Solver::Calculate(string sweepfun, int nTs_in, int blocksize_z_in)
+void Solver::Calculate()
 {
   time_used_total = omp_get_wtime();
-  assert(sweepfun == "aes" || sweepfun == "ase" || sweepfun == "eas" || sweepfun == "esa" || sweepfun == "sae" || sweepfun == "sea");
-  nTs = nTs_in;
+  assert(order == "aes" || order == "ase" || order == "eas" ||
+         order == "esa" || order == "sae" || order == "sea" ||
+         order == "eas_mod");
+  //nTs = nTs_in;
   N = sqrt(nTs);
   assert(totNFM_x % N == 0);
-  assert(blocksize_z_in <= totNFM_z);
+  assert(blocksize_z <= totNFM_z);
   cout << "# of threads is " << nTs << endl;
   blocksize_xy = totNFM_x / N;
-  blocksize_z = blocksize_z_in;
+  //blocksize_z = blocksize_z_in;
   n_b = totNFM_z / blocksize_z;
   n_p = 2 * N - 2 + n_b;
   remain = totNFM_z % blocksize_z;
@@ -197,7 +194,7 @@ void Solver::Calculate(string sweepfun, int nTs_in, int blocksize_z_in)
   real err_phi = 1.0;
   int it = 0;
 
-  while(err_phi > eps_phi && it < iter)
+  while(it < iter)
   {
     real phi0[phi_size];
     copy(phi0, 0, phi, 0, phi_size);
@@ -233,18 +230,20 @@ void Solver::Calculate(string sweepfun, int nTs_in, int blocksize_z_in)
 
     real sweep_begin_time = omp_get_wtime();
 
-    if(sweepfun == "aes")
+    if(order == "aes")
       sweep_aes(start_TID);
-    else if(sweepfun == "ase")
+    else if(order == "ase")
       sweep_ase(start_TID);
-    else if(sweepfun == "eas")
+    else if(order == "eas")
       sweep_eas(start_TID);
-    else if(sweepfun == "esa")
+    else if(order == "esa")
       sweep_esa(start_TID);
-    else if(sweepfun == "sae")
+    else if(order == "sae")
       sweep_sae(start_TID);
-    else if(sweepfun == "sea")
+    else if(order == "sea")
       sweep_sea(start_TID);
+    else if(order == "eas_mod")
+      sweep_eas_mod(start_TID);
 
     real sweep_end_time = omp_get_wtime();
     time_used_sweep += sweep_end_time - sweep_begin_time;
@@ -265,7 +264,7 @@ void Solver::Calculate(string sweepfun, int nTs_in, int blocksize_z_in)
   if (it <= iter && err_phi < eps_phi)
   {
     cout << "\nconverged in " << it << " iterations" << "\n";
-    cout << "time used in " << sweepfun << " sweep of " << it << " iterations is " << time_used_sweep << " s" << endl;
+    cout << "time used in " << order << " sweep of " << it << " iterations is " << time_used_sweep << " s" << endl;
     cout << "elapsed time per sweep is " << time_used_sweep / it << " s" << endl;
     cout << "total time is " << time_used_total << " s" << endl;
 
@@ -284,7 +283,7 @@ void Solver::Calculate(string sweepfun, int nTs_in, int blocksize_z_in)
 
   else
   {
-    cout << "\ndo not converge and time used in "<< sweepfun << " sweep in " << iter << " iterations is " << time_used_sweep << " s" << endl;
+    cout << "\ndo not converge and time used in "<< order << " sweep in " << iter << " iterations is " << time_used_sweep << " s" << endl;
     cout << "elapsed time per sweep is " << time_used_sweep / iter << " s" << endl;
     cout << "total time used is " << time_used_total << " s" << endl;
 
